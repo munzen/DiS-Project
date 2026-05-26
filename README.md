@@ -1,2 +1,1 @@
-# DiS-Project
-# Stock Market Simulator Webapp
+# DiS-Project -  Stock Market Simulator Webapp
