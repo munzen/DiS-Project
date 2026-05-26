@@ -2,9 +2,9 @@
 
 
 To-do:
-- [ ] Lav skelet af database
+- [x] Lav skelet af database
   - [ ] Tjek om det stemmer overens med E/R-diagram 
-- [ ] Process vores dataset af aktiepriser
+- [x] Process vores dataset af aktiepriser
 - [ ] Lav flask app/server
   - [ ] Bruger aktieoversigt 
   - [ ] Login-system
