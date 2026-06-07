@@ -1,0 +1,131 @@
+
+Claude conversations:
+❯ Failure to connect error despite postgres running, executing main.py, the database existing and credentials matching.
+19:17 wmunz ~ curl -X POST http://localhost:5000/register -H "Content-Type: application/json" -d '{"name": "testM1", "password": "testM1"}'
+  curl: (7) Failed to connect to localhost port 5000 after 0 ms: Could not connect to server
+
+● App still not running. What does python main.py output?
+
+✻ Crunched for 1s
+
+❯ Nothing. Running it provides no stdout.
+
+● Bug in main.py:3 — typo '___main___' (3 underscores). Should be '__main__' (2). So app.run() never executes.
+
+● Update(main.py)
+  ⎿  Added 1 line, removed 1 line
+      1  from website import create_app # imports function create_app from the __init__.py inwebsite/
+      2  app = create_app()
+      3 -if __name__ == '___main___': # only run webserver when main.py runs (not when importing!)
+      3 +if __name__ == '__main__': # only run webserver when main.py runs (not when importing!)
+----
+
+----
+
+❯  After running main.py:
+TypeError
+TypeError: cannot unpack non-iterable NoneType object
+
+Traceback (most recent call last)
+File "/home/wmunz/uni/assignments/dis/DiS-Project/venv/lib/python3.14/site-packages/flask/app.py", line 1536, in __call__
+return self.wsgi_app(environ, start_response)
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/wmunz/uni/assignments/dis/DiS-Project/venv/lib/python3.14/site-packages/flask/app.py", line 1514, in wsgi_app
+response = self.handle_exception(e)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/wmunz/uni/assignments/dis/DiS-Project/venv/lib/python3.14/site-packages/flask/app.py", line 1511, in wsgi_app
+response = self.full_dispatch_request()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/wmunz/uni/assignments/dis/DiS-Project/venv/lib/python3.14/site-packages/flask/app.py", line 919, in full_dispatch_request
+rv = self.handle_user_exception(e)
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/wmunz/uni/assignments/dis/DiS-Project/venv/lib/python3.14/site-packages/flask/app.py", line 917, in full_dispatch_request
+rv = self.dispatch_request()
+     ^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/wmunz/uni/assignments/dis/DiS-Project/venv/lib/python3.14/site-packages/flask/app.py", line 902, in dispatch_request
+return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/wmunz/uni/assignments/dis/DiS-Project/website/views.py", line 13, in decorated
+return f(*args, **kwargs)
+       ^^^^^^^^^^^^^^^^^^
+File "/home/wmunz/uni/assignments/dis/DiS-Project/website/views.py", line 25, in dashboard
+balance, sim_date = cur.fetchone()
+^^^^^^^^^^^^^^^^^
+TypeError: cannot unpack non-iterable NoneType object
+The debugger caught an exception in your WSGI application. You can now look at the traceback which led to the error.
+To switch between the interactive traceback and the plaintext one, you can click on the "Traceback" headline. From the text traceback you can also create a paste of it. For code execution mouse-over the frame you want to debug and click on the console icon on the right side.
+
+You can execute arbitrary Python code in the stack frames and there are some extra helpers available for introspection:
+
+dump() shows all variables in the frame
+dump(obj) dumps all that's known about the object
+Brought to you by DON'T PANIC, your friendly Werkzeug powered traceback interpreter.
+Show less
+The error is cur.fetchone() returning None on the query SELECT balance, sim_date FROM users WHERE user_id = %s. This means no user row was found for the session's user_id.
+
+This is likely because:
+
+The schema was changed (added balance column) but the DB wasn't re-initialized
+OR the user registered before balance was added, so the column doesn't exist in the DB yet
+OR the user doesn't exist in the DB (session has a stale user_id)
+The most likely cause: the schema was updated with balance but the actual database table hasn't been updated.
+
+Actually, fetchone() returning None means the query found no matching rows, not that the column is missing—that would throw a different error. So the real issue is the session contains a user_id that doesn't exist in the database anymore, probably because the DB was wiped when re-running the schema. The fix is to handle this gracefully by clearing the session and redirecting to login when fetchone() returns None.
+
+fetchone() returns None — user_id in session doesn't exist in DB (likely DB was wiped when schema was re-applied). Fix: clear stale session and redirect to login.
+----
+
+----
+Error:
+TypeError
+TypeError: 'NoneType' object is not subscriptable
+
+Traceback (most recent call last)
+File "/home/wmunz/uni/assignments/dis/docker/DiS-Project/venv/lib/python3.14/site-packages/flask/app.py", line 1536, in __call__
+return self.wsgi_app(environ, start_response)
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/wmunz/uni/assignments/dis/docker/DiS-Project/venv/lib/python3.14/site-packages/flask/app.py", line 1514, in wsgi_app
+response = self.handle_exception(e)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/wmunz/uni/assignments/dis/docker/DiS-Project/venv/lib/python3.14/site-packages/flask/app.py", line 1511, in wsgi_app
+response = self.full_dispatch_request()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/wmunz/uni/assignments/dis/docker/DiS-Project/venv/lib/python3.14/site-packages/flask/app.py", line 919, in full_dispatch_request
+rv = self.handle_user_exception(e)
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/wmunz/uni/assignments/dis/docker/DiS-Project/venv/lib/python3.14/site-packages/flask/app.py", line 917, in full_dispatch_request
+rv = self.dispatch_request()
+     ^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/wmunz/uni/assignments/dis/docker/DiS-Project/venv/lib/python3.14/site-packages/flask/app.py", line 902, in dispatch_request
+return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "/home/wmunz/uni/assignments/dis/DiS-project/website/views.py", line 18, in decorated
+return f(*args, **kwargs)
+       ^^^^^^^^^^^^^^^^^^
+File "/home/wmunz/uni/assignments/dis/DiS-project/website/views.py", line 69, in dashboard
+user_name = cur.fetchone()[0]
+            ^^^^^^^^^^^^^^^^^
+TypeError: 'NoneType' object is not subscriptable
+The debugger caught an exception in your WSGI application. You can now look at the traceback which led to the error.
+To switch between the interactive traceback and the plaintext one, you can click on the "Traceback" headline. From the text traceback you can also create a paste of it. For code execution mouse-over the frame you want to debug and click on the console icon on the right side.
+
+You can execute arbitrary Python code in the stack frames and there are some extra helpers available for introspection:
+
+dump() shows all variables in the frame
+dump(obj) dumps all that's known about the object
+
+● Cause: session cookie has user_id not in users table. fetchone() → None → [0] crash. Classic after db recreate — old login cookie points to user that no longer exists (or database.sql users got new ids).
+
+Quick fix: log out / clear cookies, log in fresh.
+
+Code fix — treat missing user as logged-out instead of crashing:
+/home/wmunz/uni/assignments/dis/DiS-project/website/views.py
+    cur.execute('SELECT name FROM users WHERE user_id = %s', (uid,))
+    row = cur.fetchone()
+    cur.close()
+    if row is None:
+        # stale session: user_id no longer in DB (e.g. after DB recreate)
+        session.clear()
+        return redirect(url_for('auth.login_page'))
+    user_name = row[0]
+----

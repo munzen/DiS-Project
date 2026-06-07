@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modern Fintech Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --surface-secondary: #fafafa;
+      --border: #e5e7eb;
+      --shadow: 0 4px 20px rgba(0,0,0,0.04);
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --text: #111827;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --font: Inter, SF Pro Display, Segoe UI, sans-serif;
+      --radius: 16px;
+      --card-padding: 24px;
+      --gap: 24px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+    button, input { font: inherit; }
+    .page {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 32px 28px 40px;
+    }
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+    }
+    .page-title {
+      margin: 0;
+      font-size: clamp(2rem, 2.4vw, 2.8rem);
+      font-weight: 700;
+    }
+    .page-copy {
+      margin: 12px 0 0;
+      color: var(--text-secondary);
+      max-width: 640px;
+      line-height: 1.75;
+    }
+    .action-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      border: none;
+      border-radius: 9999px;
+      padding: 10px 24px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .14s ease, background-color .14s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary {
+      background: #f3f4f6;
+      color: var(--text);
+    }
+    .btn-secondary:hover { background: #e5e7eb; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    .summary-card {
+      background: var(--surface-secondary);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .summary-card span {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .summary-card strong {
+      display: block;
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .grid {
+      display: grid;
+      gap: var(--gap);
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      align-items: start;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: var(--card-padding);
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 22px;
+    }
+    .card-title {
+      margin: 0;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    .card-subtitle {
+      margin: 6px 0 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .muted {
+      color: var(--text-secondary);
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    .panel {
+      display: grid;
+      gap: 24px;
+    }
+    .field {
+      display: grid;
+      gap: 10px;
+    }
+    .field label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .field input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 14px 16px;
+      outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+    .field input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .input-with-dropdown {
+      position: relative;
+    }
+    .dropdown {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(100% + 8px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 18px 30px rgba(15,23,42,0.08);
+      max-height: 280px;
+      overflow-y: auto;
+      z-index: 20;
+    }
+    .dropdown.hidden { display: none; }
+    .dropdown-item {
+      padding: 12px 16px;
+      cursor: pointer;
+      color: var(--text);
+      transition: background .15s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .dropdown-item:hover {
+      background: #f8fafc;
+    }
+    .dropdown-item.disabled {
+      color: var(--text-muted);
+      cursor: default;
+    }
+    .chart-mode {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .advance-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .overlay[hidden] { display: none; }
+    .modal {
+      background: var(--card, #ffffff);
+      color: inherit;
+      border-radius: 12px;
+      padding: 32px;
+      width: min(720px, 95vw);
+      max-height: 90vh;
+      overflow-x: hidden;
+      overflow-y: auto;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.4);
+    }
+    .modal-title { margin: 0 0 12px; font-size: 1.6rem; }
+    .final-score { font-size: 1.25rem; font-weight: 700; margin: 0 0 16px; }
+    .leaderboard-heading { margin: 0 0 4px; }
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    .leaderboard-table th,
+    .leaderboard-table td {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(127, 127, 127, 0.25);
+    }
+    .leaderboard-table th:last-child,
+    .leaderboard-table td:last-child { text-align: right; }
+    .leaderboard-table tr.me { font-weight: 700; }
+    .advance-buttons .btn {
+      flex: 1;
+      min-width: 80px;
+    }
+    .btn.mode-active {
+      background: var(--primary);
+      color: #ffffff;
+    }
+    .control-group {
+      display: grid;
+      gap: 18px;
+    }
+    .control-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: end;
+    }
+    .trade-actions {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .trade-feedback {
+      min-height: 1.5rem;
+      font-size: 0.95rem;
+      margin-top: 6px;
+    }
+    .trade-feedback.error { color: var(--danger); }
+    .trade-feedback.success { color: var(--success); }
+
+    .chart-card { grid-column: span 8; min-height: 460px; }
+    .holdings-card { grid-column: span 12; }
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 560px;
+    }
+    th, td {
+      padding: 16px 14px;
+      text-align: left;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    th {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    td {
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+    tbody tr:hover { background: #f8fafc; }
+    .ticker { font-weight: 700; }
+    .notice {
+      border-radius: 14px;
+      background: var(--surface-secondary);
+      border: 1px solid #e7eaef;
+      padding: 18px;
+      color: var(--text-secondary);
+    }
+
+    @media (max-width: 1080px) {
+      .summary-grid,
+      .chart-card,
+      .holdings-card { grid-column: span 12; }
+    }
+    @media (max-width: 720px) {
+      .topbar { flex-direction: column; }
+      .page { padding: 24px 18px 32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">Stock Market Simulator</h1>
+        <p class="page-copy">Trade the top US stocks and watch your portfolio grow.</p>
+      </div>
+      <div class="action-row">
+        <form action="/logout" method="post">
+          <button type="submit" class="btn btn-secondary">Logout</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <span>Cash balance</span>
+        <strong id="cash-balance">${{ "%.2f"|format(balance) }}</strong>
+      </div>
+      <div class="summary-card">
+        <span>Portfolio value</span>
+        <strong id="portfolio-value">${{ "%.2f"|format(net_worth) }}</strong>
+      </div>
+      <div class="summary-card">
+        <span>Simulation date</span>
+        <strong id="sim-date">{{ sim_date or 'Not started' }}</strong>
+      </div>
+    </div>
+
+    <div class="grid">
+      <section class="card panel" style="grid-column: span 4;">
+        <div class="card-header">
+          <div>
+            <p class="card-title">Simulation controls</p>
+            <h2 class="card-subtitle">Start and trade</h2>
+          </div>
+        </div>
+
+        <div class="notice">Current market date: <strong id="notice-date">{{ sim_date }}</strong>. Advance by a day, week, month, or year.</div>
+        <div class="field">
+          <label>Advance</label>
+          <div class="advance-buttons">
+            <button class="btn btn-primary advance-btn" type="button" data-unit="day">Day</button>
+            <button class="btn btn-primary advance-btn" type="button" data-unit="week">Week</button>
+            <button class="btn btn-primary advance-btn" type="button" data-unit="month">Month</button>
+            <button class="btn btn-primary advance-btn" type="button" data-unit="year">Year</button>
+          </div>
+          <button class="btn btn-secondary advance-btn" type="button" data-unit="end" style="margin-top: 12px; width: 100%;">Skip to simulation end</button>
+        </div>
+
+        <div class="panel" style="margin-top: 24px;">
+          <div class="chart-mode">
+            <button id="ticker-mode" class="btn btn-secondary mode-active" type="button">Single ticker</button>
+            <button id="portfolio-mode" class="btn btn-secondary" type="button">Entire portfolio</button>
+          </div>
+          <div class="field">
+            <label for="stock-input">Stock ticker</label>
+            <div class="input-with-dropdown">
+              <input id="stock-input" type="text" placeholder="Search ticker or company…" autocomplete="off">
+              <div id="stock-dropdown" class="dropdown hidden"></div>
+            </div>
+          </div>
+          <div class="field">
+            <label for="trade-qty">Quantity</label>
+            <input id="trade-qty" type="number" min="1" value="1">
+          </div>
+          <div class="trade-actions">
+            <button id="buy-btn" class="btn btn-primary" type="button">Buy</button>
+            <button id="sell-btn" class="btn btn-secondary" type="button">Sell</button>
+          </div>
+          <div id="trade-message" class="trade-feedback"></div>
+        </div>
+      </section>
+
+      <section class="card chart-card">
+        <div class="card-header">
+          <div>
+            <p class="card-title">Market insights</p>
+            <h2 class="card-subtitle">Price trend</h2>
+          </div>
+          <p class="muted" id="chart-status">Select a ticker to load the chart.</p>
+        </div>
+        <div style="height: 100%; min-height: 380px;">
+          <canvas id="trend-chart"></canvas>
+        </div>
+      </section>
+
+      <section class="card holdings-card">
+        <div class="card-header">
+          <div>
+            <p class="card-title">Holdings</p>
+            <h2 class="card-subtitle">Current positions</h2>
+          </div>
+        </div>
+        <div class="table-wrap" id="holdings-wrap">
+          {% if holdings %}
+          <table>
+            <thead>
+              <tr><th>Ticker</th><th>Company</th><th>Quantity</th><th>Close</th><th>Value</th></tr>
+            </thead>
+            <tbody>
+              {% for h in holdings %}
+              <tr>
+                <td class="ticker">{{ h.ticker }}</td>
+                <td>{{ h.company }}</td>
+                <td>{{ h.quantity }}</td>
+                <td>{{ "$%.2f"|format(h.price) if h.price else 'N/A' }}</td>
+                <td>{{ "$%.2f"|format(h.value) if h.value else 'N/A' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="notice">You do not own any stocks yet. Buy a position to see it appear here.</div>
+          {% endif %}
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="leaderboard-overlay" class="overlay" hidden>
+    <div class="modal">
+      <h2 class="modal-title">Simulation finished</h2>
+      <p id="final-score" class="final-score"></p>
+      <h3 class="leaderboard-heading">Leaderboard</h3>
+      <table class="leaderboard-table">
+        <thead>
+          <tr><th>#</th><th>Name</th><th>Score</th></tr>
+        </thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
+      <button id="leaderboard-finish" class="btn btn-primary" type="button" style="margin-top: 20px; width: 100%;">Finish</button>
+    </div>
+  </div>
+
+  <script>
+    const CURRENT_USER = "{{ user_name|default('') }}";
+    const chartStatus = document.getElementById('chart-status');
+    const stockInput = document.getElementById('stock-input');
+    const tradeMessage = document.getElementById('trade-message');
+    const quantityInput = document.getElementById('trade-qty');
+    const simDateEl = document.getElementById('sim-date');
+    let trendChart;
+
+    let stockList = [];
+    let selectedTicker = 'YHOO';
+    let chartMode = 'portfolio';
+    const stockDropdown = document.getElementById('stock-dropdown');
+    const tickerModeBtn = document.getElementById('ticker-mode');
+    const portfolioModeBtn = document.getElementById('portfolio-mode');
+
+    function formatCurrency(value) {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+    }
+
+    async function fetchStocks() {
+      const res = await fetch('/api/stocks');
+      if (!res.ok) return;
+      stockList = await res.json();
+      renderDropdown(stockList);
+    }
+
+    function renderDropdown(list) {
+      stockDropdown.innerHTML = '';
+      if (!list.length) {
+        const empty = document.createElement('div');
+        empty.className = 'dropdown-item disabled';
+        empty.textContent = 'No matching stock found';
+        stockDropdown.appendChild(empty);
+        return;
+      }
+      for (const stock of list.slice(0, 10)) {
+        const item = document.createElement('div');
+        item.className = 'dropdown-item';
+        item.textContent = `${stock.ticker} — ${stock.name}`;
+        item.dataset.ticker = stock.ticker;
+        item.addEventListener('click', () => selectTicker(stock.ticker));
+        stockDropdown.appendChild(item);
+      }
+    }
+
+    function filterDropdown(value) {
+      const query = value.trim().toLowerCase();
+      const filtered = stockList.filter(s =>
+        s.ticker.toLowerCase().includes(query) || s.name.toLowerCase().includes(query)
+      );
+      renderDropdown(filtered);
+      openDropdown();
+    }
+
+    function openDropdown() {
+      stockDropdown.classList.remove('hidden');
+    }
+
+    function hideDropdown() {
+      stockDropdown.classList.add('hidden');
+    }
+
+    function selectTicker(ticker) {
+      stockInput.value = ticker;
+      selectedTicker = ticker;
+      hideDropdown();
+      if (chartMode === 'ticker') {
+        loadChart(ticker);
+      }
+    }
+
+    function setChartMode(mode) {
+      chartMode = mode;
+      tickerModeBtn.classList.toggle('mode-active', mode === 'ticker');
+      portfolioModeBtn.classList.toggle('mode-active', mode === 'portfolio');
+      if (mode === 'portfolio') {
+        chartStatus.textContent = 'Showing portfolio trend. Use the chart mode toggle to switch back to ticker view.';
+        loadChart();
+      } else {
+        if (!selectedTicker || selectedTicker === '') {
+          selectedTicker = 'YHOO';
+        }
+        stockInput.value = selectedTicker;
+        loadChart(selectedTicker);
+      }
+    }
+
+    async function loadPrice(ticker) {
+      const res = await fetch(`/api/stock-price/${encodeURIComponent(ticker)}`);
+      if (!res.ok) {
+        const data = await res.json();
+        chartStatus.textContent = data.error || 'Unable to load ticker price.';
+        return null;
+      }
+      return res.json();
+    }
+
+    async function loadChart(ticker) {
+      if (chartMode === 'portfolio') {
+        chartStatus.textContent = 'Loading portfolio trend…';
+        const res = await fetch('/api/portfolio-history');
+        if (!res.ok) {
+          const data = await res.json();
+          chartStatus.textContent = data.error || 'No portfolio history available.';
+          return;
+        }
+        const history = await res.json();
+        if (!history.length) {
+          chartStatus.textContent = 'No holdings yet to show portfolio history.';
+          return;
+        }
+        const labels = history.map(row => row.date);
+        const prices = history.map(row => row.price);
+        chartStatus.textContent = `Showing portfolio value over the last ${history.length} trading days.`;
+        renderChart(labels, prices, 'Portfolio value');
+        return;
+      }
+
+      if (!ticker) {
+        chartStatus.textContent = 'Select a ticker to load the chart.';
+        return;
+      }
+      chartStatus.textContent = `Loading ${ticker} trend…`;
+      const res = await fetch(`/api/stock-history/${encodeURIComponent(ticker)}`);
+      if (!res.ok) {
+        const data = await res.json();
+        chartStatus.textContent = data.error || 'No history available.';
+        return;
+      }
+      const history = await res.json();
+      if (!history.length) {
+        chartStatus.textContent = 'No historical price data found for this ticker.';
+        return;
+      }
+      const labels = history.map(row => row.date);
+      const prices = history.map(row => row.price);
+      chartStatus.textContent = `Showing last ${history.length} trading days for ${ticker}.`;
+      renderChart(labels, prices, ticker);
+    }
+
+    function renderChart(labels, data, label) {
+      const ctx = document.getElementById('trend-chart');
+      if (!trendChart) {
+        trendChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label,
+              data,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59,130,246,0.12)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.35,
+              pointRadius: 0,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: '#111827',
+                titleColor: '#ffffff',
+                bodyColor: '#f8fafc',
+                borderWidth: 0,
+              }
+            },
+            scales: {
+              x: {
+                grid: { color: '#f1f5f9' },
+                ticks: { color: '#6b7280' }
+              },
+              y: {
+                grid: { color: '#f1f5f9' },
+                ticks: { color: '#6b7280' }
+              }
+            }
+          }
+        });
+      } else {
+        trendChart.data.labels = labels;
+        trendChart.data.datasets[0].data = data;
+        trendChart.data.datasets[0].label = label;
+        trendChart.update();
+      }
+    }
+
+    async function submitTrade(type) {
+      const ticker = stockInput.value.trim().toUpperCase();
+      const quantity = quantityInput.value;
+      if (!ticker) {
+        tradeMessage.textContent = 'Enter a ticker first.';
+        tradeMessage.className = 'trade-feedback error';
+        return;
+      }
+      const res = await fetch('/trade', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ ticker, type, quantity }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        tradeMessage.textContent = data.error || 'Trade failed.';
+        tradeMessage.className = 'trade-feedback error';
+        return;
+      }
+      tradeMessage.textContent = data.message;
+      tradeMessage.className = 'trade-feedback success';
+      document.getElementById('cash-balance').textContent = formatCurrency(data.balance);
+      if (typeof data.net_worth === 'number') {
+        document.getElementById('portfolio-value').textContent = formatCurrency(data.net_worth);
+      }
+      renderHoldings(data.holdings);
+      await loadChart(ticker);
+      setTimeout(() => { tradeMessage.textContent = ''; }, 4000);
+    }
+
+    function renderHoldings(holdings) {
+      const wrap = document.getElementById('holdings-wrap');
+      if (!wrap) return;
+      if (!holdings || !holdings.length) {
+        wrap.innerHTML = '<div class="notice">You do not own any stocks yet. Buy a position to see it appear here.</div>';
+        return;
+      }
+      const rows = holdings.map(h => `
+        <tr>
+          <td class="ticker">${h.ticker}</td>
+          <td>${h.company}</td>
+          <td>${h.quantity}</td>
+          <td>${h.price != null ? formatCurrency(h.price) : 'N/A'}</td>
+          <td>${h.value != null ? formatCurrency(h.value) : 'N/A'}</td>
+        </tr>`).join('');
+      wrap.innerHTML =
+        '<table><thead><tr><th>Ticker</th><th>Company</th><th>Quantity</th>' +
+        '<th>Close</th><th>Value</th></tr></thead><tbody>' + rows + '</tbody></table>';
+    }
+
+    async function advanceDay(unit) {
+      const res = await fetch('/advance-day', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ unit })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        simDateEl.textContent = data.sim_date;
+        const noticeDate = document.getElementById('notice-date');
+        if (noticeDate) noticeDate.textContent = data.sim_date;
+        if (data.finished) {
+          await showLeaderboard(data.score);
+          return;
+        }
+        // Patch the dashboard in place - no full page reload.
+        if (typeof data.balance === 'number') {
+          document.getElementById('cash-balance').textContent = formatCurrency(data.balance);
+        }
+        if (typeof data.net_worth === 'number') {
+          document.getElementById('portfolio-value').textContent = formatCurrency(data.net_worth);
+        }
+        renderHoldings(data.holdings);
+        // Combobox must reflect stocks listed on the new date.
+        await fetchStocks();
+        if (chartMode === 'portfolio') {
+          await loadChart();
+        } else if (selectedTicker) {
+          await loadChart(selectedTicker);
+        }
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Unable to advance date');
+      }
+    }
+
+    async function showLeaderboard(score) {
+      const overlay = document.getElementById('leaderboard-overlay');
+      const body = document.getElementById('leaderboard-body');
+      const scoreEl = document.getElementById('final-score');
+      if (typeof score === 'number') {
+        scoreEl.textContent = `Your final score: $${score.toFixed(2)}`;
+      } else {
+        scoreEl.textContent = '';
+      }
+      const res = await fetch('/api/leaderboard');
+      const rows = res.ok ? await res.json() : [];
+      body.innerHTML = rows.map((r, i) =>
+        `<tr class="${r.name === CURRENT_USER ? 'me' : ''}">` +
+        `<td>${i + 1}</td><td>${r.name}</td><td>$${r.score.toFixed(2)}</td></tr>`
+      ).join('') || '<tr><td colspan="3">No entries yet.</td></tr>';
+      overlay.hidden = false;
+    }
+
+    document.getElementById('leaderboard-finish')?.addEventListener('click', async () => {
+      // Finishing logs the user out; the account is then locked (see auth.has_finished).
+      await fetch('/logout', { method: 'POST' });
+      window.location.href = '/login';
+    });
+
+    document.addEventListener('click', event => {
+      if (!event.target.closest('.input-with-dropdown')) {
+        hideDropdown();
+      }
+    });
+
+    document.querySelectorAll('.advance-btn').forEach(btn =>
+      btn.addEventListener('click', () => advanceDay(btn.dataset.unit)));
+    document.getElementById('buy-btn').addEventListener('click', () => submitTrade('buy'));
+    document.getElementById('sell-btn').addEventListener('click', () => submitTrade('sell'));
+    document.getElementById('ticker-mode')?.addEventListener('click', () => setChartMode('ticker'));
+    document.getElementById('portfolio-mode')?.addEventListener('click', () => setChartMode('portfolio'));
+    stockInput.addEventListener('input', event => filterDropdown(event.target.value));
+    stockInput.addEventListener('focus', () => { if (stockList.length) openDropdown(); });
+
+    async function initializeDashboard() {
+      await fetchStocks();
+      // Set initial chart mode buttons to portfolio
+      tickerModeBtn.classList.toggle('mode-active', chartMode === 'ticker');
+      portfolioModeBtn.classList.toggle('mode-active', chartMode === 'portfolio');
+      // Load portfolio chart on startup
+      await loadChart();
+    }
+
+    initializeDashboard();
+  </script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f3f4f6;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --muted: #6b7280;
+      --primary: #4338ca;
+      --radius: 18px;
+      --shadow: 0 20px 45px rgba(15,23,42,0.08);
+      font-family: Inter, system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, rgba(59,130,246,0.12), transparent 38%),
+        linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .auth-layout {
+      display: flex;
+      gap: 24px;
+      align-items: stretch;
+      justify-content: center;
+      flex-wrap: wrap;
+      width: min(900px, 100%);
+    }
+    .auth-card {
+      flex: 1 1 340px;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 32px;
+    }
+    .leaderboard-card {
+      flex: 1 1 340px;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 32px;
+    }
+    .leaderboard-card h2 {
+      margin: 0 0 4px;
+      font-size: 1.4rem;
+    }
+    .leaderboard-card p.subtitle { margin: 0 0 18px; }
+    .lb-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .lb-table th, .lb-table td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+    .lb-table th { color: var(--muted); font-weight: 600; }
+    .lb-table th:last-child, .lb-table td:last-child { text-align: right; }
+    .lb-empty { color: var(--muted); font-size: 0.95rem; }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 1.9rem;
+    }
+    p.subtitle {
+      margin: 0 0 24px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    label {
+      display: block;
+      margin-bottom: 16px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      font-size: 1rem;
+      margin-top: 8px;
+    }
+    button {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 14px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .auth-footer {
+      margin-top: 20px;
+      font-size: 0.95rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    .auth-footer a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .auth-error {
+      margin: 12px 0 0;
+      color: #b91c1c;
+      font-size: 0.95rem;
+      min-height: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-layout">
+    <div class="auth-card">
+      <h1>Create account</h1>
+      <form id="form">
+        <label>
+          Name
+          <input name="name" autocomplete="username">
+        </label>
+        <label>
+          Password
+          <input name="password" type="password" autocomplete="new-password">
+        </label>
+        <button type="submit">Register</button>
+        <div id="auth-error" class="auth-error"></div>
+      </form>
+      <p class="auth-footer">Already have an account? <a href="/login">Login</a></p>
+    </div>
+
+    <aside class="leaderboard-card">
+      <h2>Leaderboard</h2>
+      <p class="subtitle">Top finishers by final score.</p>
+      {% if leaderboard %}
+      <table class="lb-table">
+        <thead>
+          <tr><th>#</th><th>Name</th><th>Score</th></tr>
+        </thead>
+        <tbody>
+          {% for row in leaderboard %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ row.name }}</td>
+            <td>${{ "%.2f"|format(row.score) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="lb-empty">No finishers yet. Be the first to complete the simulation.</p>
+      {% endif %}
+    </aside>
+  </div>
+  <script>
+    const authError = document.getElementById('auth-error');
+    document.getElementById('form').addEventListener('submit', async e => {
+      e.preventDefault();
+      authError.textContent = '';
+      const res = await fetch('/register', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(Object.fromEntries(new FormData(e.target)))
+      });
+      if (res.ok) location.href = '/';
+      else {
+        const body = await res.json().catch(() => null);
+        authError.textContent = body?.error || 'Registration failed';
+      }
+    });
+  </script>
+</body>
+</html>
